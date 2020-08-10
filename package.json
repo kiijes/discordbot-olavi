@@ -1,0 +1,29 @@
+{
+  "name": "discordbot-olavi",
+  "version": "0.0.1",
+  "description": "Discord bot project for practising Discord.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiijes/discordbot-olavi.git"
+  },
+  "keywords": [
+    "bot",
+    "discord",
+    "discordjs",
+    "nodejs",
+    "ffmpeg"
+  ],
+  "author": "Jesse Kiilamaa",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kiijes/discordbot-olavi/issues"
+  },
+  "homepage": "https://github.com/kiijes/discordbot-olavi#readme",
+  "dependencies": {
+    "discord.js": "^12.2.0"
+  }
+}
