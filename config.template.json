@@ -1,0 +1,6 @@
+// Rename this file to config.json
+
+{
+    "prefix": "your-chat-prefix",
+    "token": "your-bot-token"
+}
