@@ -6,9 +6,12 @@ class Player {
         this._dispatcher = null
         this._queue = []
         this._voiceChannel = null
+        this._playing = false;
     }
 
     async play() {
+        this.playing = true
+
         if (!this.connection) {
             this.connection = await this.voiceChannel.join()
         }
@@ -24,6 +27,7 @@ class Player {
 
         this.dispatcher.on('finish', () => {
             console.log('dispatcher finished playing')
+            this.playing = false
 
             if (!this.queue.length) {
                 this.closeConnection()
@@ -36,6 +40,7 @@ class Player {
 
         this.dispatcher.on('error', (error) => {
             console.log(error)
+            this.playing = false
             this.closeConnection()
         })
     }
@@ -93,6 +98,8 @@ class Player {
 
     closeConnection() {
         this.connection.disconnect()
+        this.connection = null
+        this.playing = false
     }
 
     get connection() {
@@ -105,6 +112,14 @@ class Player {
 
     sendMessage(channel, message) {
         channel.send(message)
+    }
+
+    get playing() {
+        return this._playing
+    }
+
+    set playing(status) {
+        this._playing = status
     }
 }
 

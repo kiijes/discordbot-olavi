@@ -26,6 +26,10 @@ client.once('ready', () => {
 })
 
 client.on('message', (message) => {
+    if (message.channel.type === 'dm' && !message.author.bot) {
+        return message.reply('https://www.youtube.com/watch?v=d_4Cfl8xNeo')
+    }
+
     if (!message.content.startsWith(prefix) || message.author.bot) return
 
     const args = message.content.slice(prefix.length).trim().split(/ +/)
