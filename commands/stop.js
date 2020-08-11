@@ -1,4 +1,4 @@
-const eventEmitter = require('./play').eventEmitter
+const musicPlayer = require('../player/player').musicPlayer
 
 module.exports = {
     name: 'stop',
@@ -7,6 +7,6 @@ module.exports = {
     guildOnly: true,
     cooldown: 0,
     execute(message, args) {
-        eventEmitter.emit('stop music')
+        musicPlayer.closeConnection()
     }
 }

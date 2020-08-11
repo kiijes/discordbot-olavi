@@ -22,6 +22,7 @@ const token = config.token
 
 client.once('ready', () => {
     console.log('ready!')
+    client.user.setActivity(`kkona ttunes`)
 })
 
 client.on('message', (message) => {
