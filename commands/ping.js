@@ -1,8 +1,7 @@
 module.exports = {
     name: 'ping',
-    description: 'Ping command',
-    args: true,
-    usage: '<pong> <pung>',
+    description: 'Ping.',
+    args: false,
     guildOnly: true,
     cooldown: 10,
     execute(message, args) {

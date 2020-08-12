@@ -46,7 +46,15 @@ class Player {
     }
 
     async pushIntoQueue(url, textChannel) {
+        const ytRegex = /^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[\w-]{11}$|^https?:\/\/youtu\.be\/[\w-]{11}$|^[\w-]{11}$/
+
         let promise = new Promise(async (resolve, reject) => {
+            if (!ytRegex.test(url)) {
+                textChannel.send('Not an acceptable YouTube link.')
+                resolve(false)
+                return
+            }
+
             let checkLengthResults = await this.checkLength(url)
             if (!checkLengthResults[0]) {
                 textChannel.send('Song is too long! Limit is 1hr 1min.')

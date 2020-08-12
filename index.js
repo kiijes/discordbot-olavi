@@ -40,14 +40,14 @@ client.on('message', (message) => {
     const command = client.commands.get(commandName)
 
     if (command.guildOnly && message.channel.type === 'dm') {
-        return message.reply(`i can't execute this command in dm's!`)
+        return message.reply(`I can't execute this command in DMs!`)
     }
 
     if (command.args && !args.length) {
-        let reply = `you didn't provide any arguments!`
+        let reply = `You didn't provide any arguments!`
 
         if (command.usage) {
-            reply += `\nthe proper usage would be: \`${prefix}${commandName} ${command.usage}\``
+            reply += `\nThe proper usage would be: \`${prefix}${commandName} ${command.usage}\``
         }
 
         return message.channel.send(reply)
@@ -66,7 +66,7 @@ client.on('message', (message) => {
 
         if (now < expirationTime) {
             const timeLeft = (expirationTime - now) / 1000
-            return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the command \`${command.name}\``)
+            return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the command \`${command.name}\``)
         }
     }
 
@@ -77,7 +77,7 @@ client.on('message', (message) => {
         command.execute(message, args)
     } catch (error) {
         console.error(error)
-        message.reply('error executing command!')
+        message.reply('Error executing command!')
     }
     
 })
