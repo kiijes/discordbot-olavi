@@ -49,7 +49,9 @@ class Player {
         let promise = new Promise(async (resolve, reject) => {
             let checkLengthResults = await this.checkLength(url)
             if (!checkLengthResults[0]) {
+                textChannel.send('Song is too long! Limit is 1hr 1min.')
                 resolve(false)
+                return
             }
     
             this.queue.push({ link: url, title: checkLengthResults[1], requestChannel: textChannel })
@@ -67,13 +69,24 @@ class Player {
         let info = await ytdl.getInfo(url, options)
     
         let promise = new Promise((resolve, reject) => {
-            if (info.playerResponse.videoDetails.lengthSeconds > 850) {
+            if (info.playerResponse.videoDetails.lengthSeconds > 3660) {
                 resolve([false, info.playerResponse.videoDetails.title])
+                return
             }
             resolve([true, info.playerResponse.videoDetails.title])
         })
     
         return await promise
+    }
+
+    skip(message) {
+        this.dispatcher.destroy()
+        if (!this.queue.length) {
+            message.channel.send('No more songs in queue, stopping!')
+            this.closeConnection()
+            return
+        }
+        this.play()
     }
 
     get queue() {

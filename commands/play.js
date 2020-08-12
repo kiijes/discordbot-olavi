@@ -9,7 +9,7 @@ module.exports = {
     cooldown: 0,
     async execute(message, args) {
         if (!message.member.voice.channel) {
-            return message.channel.send('You must be in a voice channel to start playback!')
+            return message.channel.send('You must be in a voice channel to use this command!')
         }
         
         if (!musicPlayer.voiceChannel) {
@@ -22,7 +22,7 @@ module.exports = {
         }
 
         if (args.length > 0) {
-            await musicPlayer.pushIntoQueue(args[0], message.channel)
+            if (!await musicPlayer.pushIntoQueue(args[0], message.channel)) return
         }
         
         if (!musicPlayer.playing) {

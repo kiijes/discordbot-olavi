@@ -1,4 +1,4 @@
-const eventEmitter = require('./play').eventEmitter
+const musicPlayer = require('../player/player').musicPlayer
 
 module.exports = {
     name: 'skip',
@@ -7,6 +7,14 @@ module.exports = {
     guildOnly: true,
     cooldown: 0,
     execute(message, args) {
-        eventEmitter.emit('skip')
+        if (!message.member.voice.channel) {
+            return message.channel.send('You must be in a voice channel to use this command!')
+        }
+
+        if (!musicPlayer.playing) {
+            message.channel.send('Nothing is playing!')
+            return
+        }
+        musicPlayer.skip(message)
     }
 }
