@@ -2,5 +2,6 @@
 
 {
     "prefix": "your-chat-prefix",
-    "token": "your-bot-token"
+    "token": "your-bot-token",
+    "nhlLogoUrl": "URL for the logo you want to use as the NHL embed thumbnail"
 }
