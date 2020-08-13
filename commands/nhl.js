@@ -37,27 +37,32 @@ function formatDate(date) {
 module.exports = {
     name: 'nhl',
     description: 'Get the NHL schedule for yesterday, today or tomorrow.',
-    usage: 'today (or leave empty) | yesterday | tomorrow',
+    usage: 'today (or leave empty) | yesterday | tomorrow | yyyy-mm-dd',
     args: false,
     guildOnly: true,
     cooldown: 5,
     execute(message, args) {
         let fullDateFormatted = ''
-        let date = Date.now()
 
-        switch (args[0]) {
-            case 'yesterday':
-                fullDateFormatted = formatDate(date - 24*60*60*1000)
-                break
-            case 'tomorrow':
-                fullDateFormatted = formatDate(date + 24*60*60*1000)
-                break
-            case 'today':
-            case undefined:
-                fullDateFormatted = formatDate(date)
-                break
-            default:
-                return message.channel.send('Argument given was invalid.' + `\nThe proper usage would be: \`${prefix}${this.name} ${this.usage}\``)
+        if (!/^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[1-2][0-9]|3[0-1])$/.test(args[0])) {
+            let date = Date.now()
+
+            switch (args[0]) {
+                case 'yesterday':
+                    fullDateFormatted = formatDate(date - 24*60*60*1000)
+                    break
+                case 'tomorrow':
+                    fullDateFormatted = formatDate(date + 24*60*60*1000)
+                    break
+                case 'today':
+                case undefined:
+                    fullDateFormatted = formatDate(date)
+                    break
+                default:
+                    return message.channel.send('Argument given was invalid.' + `\nThe proper usage would be: \`${prefix}${this.name} ${this.usage}\``)
+            }
+        } else {
+            fullDateFormatted = args[0]
         }
         
         https.get(url + `?date=${fullDateFormatted}`, res => {
@@ -68,6 +73,17 @@ module.exports = {
             });
             res.on('end', () => {
                 body = JSON.parse(body)
+
+                if (!body.dates.length) {
+                    return message.channel.send({
+                        embed: {
+                            color: 0x0099ff,
+                            title: `Schedule for ${fullDateFormatted}`,
+                            description: 'No games scheduled for this date.'
+                        }
+                    })
+                }
+
                 games = body.dates[0].games
                 gameFields = []
 
@@ -94,7 +110,7 @@ module.exports = {
                     footer: {
                         // the code to get the timezone is from:
                         // https://www.w3resource.com/javascript-exercises/javascript-date-exercise-37.php
-                        text: `Times are in ${/\((.*)\)/.exec(new Date(date).toString())[1]}.`
+                        text: `Times are in ${/\((.*)\)/.exec(new Date(Date.now()).toString())[1]}.`
                     }
                 }
 
