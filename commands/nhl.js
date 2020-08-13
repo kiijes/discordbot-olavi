@@ -9,7 +9,7 @@ function returnEmoji(gameState) {
 
     switch (true) {
         case /^inprogress$/.test(formattedGameState):
-            emoji = '🔴'
+            emoji = '🟢'
             break
         case /^pre.?game$/.test(formattedGameState):
             emoji = '🔵'
@@ -18,7 +18,7 @@ function returnEmoji(gameState) {
             emoji = '⏰'
             break
         case /^final$/.test(formattedGameState):
-            emoji = '🟢'
+            emoji = '🔴'
             break
     }
 
@@ -43,17 +43,18 @@ module.exports = {
     cooldown: 5,
     execute(message, args) {
         let fullDateFormatted = ''
+        let date = Date.now()
 
         switch (args[0]) {
             case 'yesterday':
-                fullDateFormatted = formatDate(Date.now() - 24*60*60*1000)
+                fullDateFormatted = formatDate(date - 24*60*60*1000)
                 break
             case 'tomorrow':
-                fullDateFormatted = formatDate(Date.now() + 24*60*60*1000)
+                fullDateFormatted = formatDate(date + 24*60*60*1000)
                 break
             case 'today':
             case undefined:
-                fullDateFormatted = formatDate(Date.now())
+                fullDateFormatted = formatDate(date)
                 break
             default:
                 return message.channel.send('Argument given was invalid.' + `\nThe proper usage would be: \`${prefix}${this.name} ${this.usage}\``)
@@ -78,7 +79,7 @@ module.exports = {
                     gameFields.push(
                         {
                             'name': `${gameDateFormatted} - ${game.teams.away.team.name} @ ${game.teams.home.team.name}`,
-                            'value': `**Status:** ${game.status.detailedState} ${returnEmoji(game.status.detailedState)}`
+                            'value': `**Status:** ${returnEmoji(game.status.detailedState)} ▸ ${game.status.detailedState}`
                         }
                     )
                 }
@@ -89,6 +90,11 @@ module.exports = {
                     fields: gameFields,
                     thumbnail: {
                         url: nhlLogoUrl
+                    },
+                    footer: {
+                        // the code to get the timezone is from:
+                        // https://www.w3resource.com/javascript-exercises/javascript-date-exercise-37.php
+                        text: `Times are in ${/\((.*)\)/.exec(new Date(date).toString())[1]}.`
                     }
                 }
 
