@@ -33,6 +33,10 @@ class MusicPlayer {
       this.audioPlayer = createAudioPlayer({
         behaviors: NoSubscriberBehavior.Play,
       });
+
+      this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
+        this.playNextSong();
+      });
     }
 
     this.playing = true;
@@ -52,13 +56,12 @@ class MusicPlayer {
 
       connection.on(VoiceConnectionStatus.Ready, () => {
         connection.subscribe(this.audioPlayer);
+        this.playNextSong();
       });
     }
+  }
 
-    // this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
-
-    // });
-
+  playNextSong() {
     const song = this.queue.shift();
 
     if (song === undefined) {
@@ -66,32 +69,8 @@ class MusicPlayer {
     }
 
     this.song = song;
-    try {
-      this.audioPlayer.play(this.getSongResource(song));
-    } catch (error) {
-      this.logger("caught error " + error);
-    }
+    this.audioPlayer.play(this.getSongResource(song));
     song.requestChannel.send(`Now playing \`${song.title}\``);
-
-    // this.dispatcher.on("finish", () => {
-    //   this.logger("dispatcher finished playing");
-    //   this.playing = false;
-    //   this.song = null;
-
-    //   if (!this.queue.length) {
-    //     this.closeConnection();
-    //     return;
-    //   }
-
-    //   this.logger("songs in queue, playing next one");
-    //   this.play();
-    // });
-
-    // this.dispatcher.on("error", (error) => {
-    //   this.logger(error);
-    //   this.playing = false;
-    //   this.closeConnection();
-    // });
   }
 
   getGuildVoiceConnection() {
@@ -158,17 +137,8 @@ class MusicPlayer {
     });
   }
 
-  skip(message) {
-    const song = this.queue.shift();
-
-    if (song === undefined) {
-      message.channel.send("No more songs in queue, stopping!");
-      return this.closeConnection();
-    }
-
-    this.song = song;
-    this.audioPlayer.play(this.getSongResource(song));
-    song.requestChannel.send(`Now playing \`${song.title}\``);
+  skip() {
+    this.playNextSong();
   }
 
   closeConnection() {

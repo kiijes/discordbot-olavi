@@ -29,16 +29,30 @@ module.exports = {
     console.log(
       `[clear] listing songs in queue in guild id ${message.guild.id}`
     );
-    // let queueString = "Songs in queue:```\n";
-    // musicPlayer.queue.forEach((song, index) => {
-    //   queueString += `${index + 1}: ${song.title} — added by ${
-    //     song.addedByName
-    //   }\n`;
-    // });
-    // queueString += "```";
 
-    // message.channel.send(queueString);
+    // Embed for currently playing song, if any
+    const song = musicPlayer.song;
 
+    let nowPlayingField;
+
+    if (song === null) {
+      nowPlayingField = {
+        name: `NOW PLAYING`,
+        value: `Silence. Nothing is playing.`,
+      };
+    } else {
+      nowPlayingField = {
+        name: `NOW PLAYING`,
+        value: `**Song:** ${song.title}\n**Added by:** ${song.addedByName}`,
+      };
+    }
+
+    const nowPlayingEmbed = {
+      color: 0x0099ff,
+      fields: [nowPlayingField],
+    };
+
+    // Embed for song queue
     let songFields = [];
 
     musicPlayer.queue.forEach((song, index) => {
@@ -54,6 +68,6 @@ module.exports = {
       fields: songFields,
     };
 
-    message.channel.send({ embeds: [queueListEmbed] });
+    message.channel.send({ embeds: [nowPlayingEmbed, queueListEmbed] });
   },
 };
