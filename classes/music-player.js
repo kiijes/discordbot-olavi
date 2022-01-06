@@ -24,6 +24,8 @@ class MusicPlayer {
   }
 
   async play() {
+    this.playing = true;
+
     if (this.timeout !== null) {
       this.clearInstanceDeletionTimer();
     }
@@ -35,11 +37,10 @@ class MusicPlayer {
       });
 
       this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
+        this.logger("idle player, playing next song if any in queue");
         this.playNextSong();
       });
     }
-
-    this.playing = true;
 
     let connection;
 
@@ -84,8 +85,7 @@ class MusicPlayer {
         highWaterMark: 1024 * 1024 * 5,
       }).on("finish", () => {
         this.logger("ytdl finished downloading");
-      }),
-      { inputType: StreamType.WebmOpus }
+      })
     );
   }
 
@@ -122,19 +122,18 @@ class MusicPlayer {
   }
 
   async checkLength(url) {
-    return new Promise(async (resolve, reject) => {
-      let options = {
-        quality: "highestaudio",
-      };
-      let info = await ytdl.getInfo(url, options);
-      let playerResponse = info.player_response;
+    let options = {
+      quality: "highestaudio",
+    };
 
-      if (playerResponse.videoDetails.lengthSeconds > 3660) {
-        resolve([false, playerResponse.videoDetails.title]);
-        return;
-      }
-      resolve([true, playerResponse.videoDetails.title]);
-    });
+    let info = await ytdl.getInfo(url, options);
+    let playerResponse = info.player_response;
+
+    if (playerResponse.videoDetails.lengthSeconds > 3660) {
+      return [false, playerResponse.videoDetails.title];
+    }
+
+    return [true, playerResponse.videoDetails.title];
   }
 
   skip() {
