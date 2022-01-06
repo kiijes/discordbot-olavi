@@ -1,7 +1,8 @@
 const ytdl = require("ytdl-core");
 
-class Player {
-  constructor() {
+class MusicPlayer {
+  constructor(guildId) {
+    this._guildId = guildId;
     this._connection = null;
     this._dispatcher = null;
     this._queue = [];
@@ -23,14 +24,14 @@ class Player {
         quality: "highestaudio",
         highWaterMark: 1024 * 1024 * 5,
       }).on("finish", () => {
-        console.log("ytdl finished downloading");
+        this.logger("ytdl finished downloading");
       })
     );
 
     song.requestChannel.send(`Now playing \`${song.title}\``);
 
     this.dispatcher.on("finish", () => {
-      console.log("dispatcher finished playing");
+      this.logger("dispatcher finished playing");
       this.playing = false;
 
       if (!this.queue.length) {
@@ -38,12 +39,12 @@ class Player {
         return;
       }
 
-      console.log("songs in queue, playing next one");
+      this.logger("songs in queue, playing next one");
       this.play();
     });
 
     this.dispatcher.on("error", (error) => {
-      console.log(error);
+      this.logger(error);
       this.playing = false;
       this.closeConnection();
     });
@@ -141,6 +142,14 @@ class Player {
     channel.send(message);
   }
 
+  logger(logMessage) {
+    console.log(`[music player] ${logMessage} [guild id ${this.guildId}]`);
+  }
+
+  get guildId() {
+    return this._guildId;
+  }
+
   get playing() {
     return this._playing;
   }
@@ -150,5 +159,4 @@ class Player {
   }
 }
 
-const musicPlayer = new Player();
-module.exports.musicPlayer = musicPlayer;
+module.exports.MusicPlayer = MusicPlayer;

@@ -1,4 +1,5 @@
-const musicPlayer = require("../player/player").musicPlayer;
+const getMusicPlayer = require("../instances").getMusicPlayer;
+const createMusicPlayer = require("../instances").createMusicPlayer;
 
 module.exports = {
   name: "play",
@@ -12,6 +13,18 @@ module.exports = {
       return message.channel.send(
         "You must be in a voice channel to use this command!"
       );
+    }
+
+    console.log(
+      `[play] getting the music player for guild id ${message.guild.id}`
+    );
+    let musicPlayer = getMusicPlayer(message.guild.id);
+
+    if (musicPlayer === undefined) {
+      console.log(
+        `[play] guild id ${message.guild.id} has no music player; creating one now`
+      );
+      musicPlayer = createMusicPlayer(message.guild.id);
     }
 
     if (!musicPlayer.voiceChannel) {
