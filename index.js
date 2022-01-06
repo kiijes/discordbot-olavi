@@ -1,10 +1,18 @@
-const Discord = require("discord.js");
-const client = new Discord.Client();
+const { Client, Intents, Collection } = require("discord.js");
+const client = new Client({
+  intents: [
+    Intents.FLAGS.GUILDS,
+    Intents.FLAGS.GUILD_MESSAGES,
+    Intents.FLAGS.DIRECT_MESSAGES,
+    Intents.FLAGS.GUILD_VOICE_STATES,
+  ],
+  partials: ["MESSAGE", "CHANNEL"],
+});
 const config = require("./config.json");
 const fs = require("fs");
 
 // Create a collection and load commands into it
-client.commands = new Discord.Collection();
+client.commands = new Collection();
 const commandFiles = fs
   .readdirSync("./commands")
   .filter((file) => file.endsWith(".js"));
@@ -16,7 +24,7 @@ for (const file of commandFiles) {
 }
 
 // Collection of cooldowns to check whether user can use command
-const cooldowns = new Discord.Collection();
+const cooldowns = new Collection();
 
 // Load chat prefix and token from config
 const prefix = config.prefix;
@@ -27,23 +35,23 @@ client.once("ready", () => {
   client.user.setActivity(`kkona ttunes`);
 });
 
-client.on("message", (message) => {
-  if (message.channel.type === "dm" && !message.author.bot) {
-    return message.reply("https://www.youtube.com/watch?v=d_4Cfl8xNeo");
-  }
-
-  if (!message.content.startsWith(prefix) || message.author.bot) return;
+client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
 
-  if (!client.commands.has(commandName)) return;
+  if (message.channel.type === "DM") {
+    return message.author.send(
+      "I don't do DM's, silly.\nhttps://www.youtube.com/watch?v=d_4Cfl8xNeo"
+    );
+  }
+
+  if (!client.commands.has(commandName)) {
+    return message.channel.send("I know no such thing.");
+  }
 
   const command = client.commands.get(commandName);
-
-  if (command.guildOnly && message.channel.type === "dm") {
-    return message.reply(`I can't execute this command in DMs!`);
-  }
 
   if (command.args && !args.length) {
     let reply = `You didn't provide any arguments!`;
@@ -56,7 +64,7 @@ client.on("message", (message) => {
   }
 
   if (!cooldowns.has(command.name)) {
-    cooldowns.set(command.name, new Discord.Collection());
+    cooldowns.set(command.name, new Collection());
   }
 
   const now = Date.now();

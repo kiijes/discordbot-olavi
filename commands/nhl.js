@@ -129,7 +129,7 @@ module.exports = {
           },
         };
 
-        message.channel.send({ embed: nhlEmbed });
+        message.channel.send({ embeds: [nhlEmbed] });
       });
     });
   },

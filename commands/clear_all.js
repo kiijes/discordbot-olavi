@@ -2,6 +2,7 @@ const getMusicPlayerInstance =
   require("../instances/music-players").getMusicPlayerInstance;
 const deleteMusicPlayerInstance =
   require("../instances/music-players").deleteMusicPlayerInstance;
+const { Permissions } = require("discord.js");
 
 module.exports = {
   name: "clear_all",
@@ -10,7 +11,7 @@ module.exports = {
   guildOnly: true,
   cooldown: 0,
   execute(message, args) {
-    if (!message.member.hasPermission("BAN_MEMBERS")) {
+    if (!message.member.permissions.has(Permissions.FLAGS.BAN_MEMBERS)) {
       return message.channel.send("Not privileged enough to use this command.");
     }
 

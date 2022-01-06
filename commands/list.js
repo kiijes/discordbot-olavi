@@ -29,14 +29,31 @@ module.exports = {
     console.log(
       `[clear] listing songs in queue in guild id ${message.guild.id}`
     );
-    let queueString = "Songs in queue:```\n";
-    musicPlayer.queue.forEach((song, index) => {
-      queueString += `${index + 1}: ${song.title} — added by ${
-        song.addedByName
-      }\n`;
-    });
-    queueString += "```";
+    // let queueString = "Songs in queue:```\n";
+    // musicPlayer.queue.forEach((song, index) => {
+    //   queueString += `${index + 1}: ${song.title} — added by ${
+    //     song.addedByName
+    //   }\n`;
+    // });
+    // queueString += "```";
 
-    message.channel.send(queueString);
+    // message.channel.send(queueString);
+
+    let songFields = [];
+
+    musicPlayer.queue.forEach((song, index) => {
+      songFields.push({
+        name: `${song.title}`,
+        value: `Added by ${song.addedByName}`,
+      });
+    });
+
+    const queueListEmbed = {
+      color: 0x0099ff,
+      title: "CURRENT QUEUE",
+      fields: songFields,
+    };
+
+    message.channel.send({ embeds: [queueListEmbed] });
   },
 };

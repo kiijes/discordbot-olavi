@@ -1,16 +1,26 @@
+const {
+  joinVoiceChannel,
+  getVoiceConnection,
+  createAudioPlayer,
+  NoSubscriberBehavior,
+  createAudioResource,
+  VoiceConnectionStatus,
+  AudioPlayerStatus,
+  StreamType,
+} = require("@discordjs/voice");
 const ytdl = require("ytdl-core");
 const { eventEmitter } = require("../instances/events");
 
 class MusicPlayer {
   constructor(guildId) {
     this._guildId = guildId;
-    this._connection = null;
     this._dispatcher = null;
     this._queue = [];
     this._voiceChannel = null;
     this._playing = false;
     this._song = null;
     this._timeout = null;
+    this._audioPlayer = null;
   }
 
   async play() {
@@ -18,46 +28,86 @@ class MusicPlayer {
       this.clearInstanceDeletionTimer();
     }
 
+    if (this.audioPlayer === null) {
+      this.logger("creating an audio player");
+      this.audioPlayer = createAudioPlayer({
+        behaviors: NoSubscriberBehavior.Play,
+      });
+    }
+
     this.playing = true;
 
-    if (!this.connection) {
-      this.connection = await this.voiceChannel.join();
+    let connection;
+
+    if (!this.getGuildVoiceConnection()) {
+      this.logger("joining a voice channel");
+
+      const channelInfo = {
+        channelId: this.voiceChannel.id,
+        guildId: this.voiceChannel.guild.id,
+        adapterCreator: this.voiceChannel.guild.voiceAdapterCreator,
+      };
+
+      connection = joinVoiceChannel(channelInfo);
+
+      connection.on(VoiceConnectionStatus.Ready, () => {
+        connection.subscribe(this.audioPlayer);
+      });
     }
+
+    // this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
+
+    // });
 
     const song = this.queue.shift();
 
-    this.song = song;
+    if (song === undefined) {
+      return this.closeConnection();
+    }
 
-    this.dispatcher = this.connection.play(
+    this.song = song;
+    try {
+      this.audioPlayer.play(this.getSongResource(song));
+    } catch (error) {
+      this.logger("caught error " + error);
+    }
+    song.requestChannel.send(`Now playing \`${song.title}\``);
+
+    // this.dispatcher.on("finish", () => {
+    //   this.logger("dispatcher finished playing");
+    //   this.playing = false;
+    //   this.song = null;
+
+    //   if (!this.queue.length) {
+    //     this.closeConnection();
+    //     return;
+    //   }
+
+    //   this.logger("songs in queue, playing next one");
+    //   this.play();
+    // });
+
+    // this.dispatcher.on("error", (error) => {
+    //   this.logger(error);
+    //   this.playing = false;
+    //   this.closeConnection();
+    // });
+  }
+
+  getGuildVoiceConnection() {
+    return getVoiceConnection(this.voiceChannel.guild.id);
+  }
+
+  getSongResource(song) {
+    return createAudioResource(
       ytdl(song.link, {
         quality: "highestaudio",
         highWaterMark: 1024 * 1024 * 5,
       }).on("finish", () => {
         this.logger("ytdl finished downloading");
-      })
+      }),
+      { inputType: StreamType.WebmOpus }
     );
-
-    song.requestChannel.send(`Now playing \`${song.title}\``);
-
-    this.dispatcher.on("finish", () => {
-      this.logger("dispatcher finished playing");
-      this.playing = false;
-      this.song = null;
-
-      if (!this.queue.length) {
-        this.closeConnection();
-        return;
-      }
-
-      this.logger("songs in queue, playing next one");
-      this.play();
-    });
-
-    this.dispatcher.on("error", (error) => {
-      this.logger(error);
-      this.playing = false;
-      this.closeConnection();
-    });
   }
 
   async pushIntoQueue(url, textChannel, memberId, memberName) {
@@ -109,22 +159,31 @@ class MusicPlayer {
   }
 
   skip(message) {
-    this.dispatcher.destroy();
-    if (!this.queue.length) {
+    const song = this.queue.shift();
+
+    if (song === undefined) {
       message.channel.send("No more songs in queue, stopping!");
-      this.closeConnection();
-      return;
+      return this.closeConnection();
     }
-    this.play();
+
+    this.song = song;
+    this.audioPlayer.play(this.getSongResource(song));
+    song.requestChannel.send(`Now playing \`${song.title}\``);
   }
 
   closeConnection() {
-    this.logger("closing connection");
-    this.connection.disconnect();
+    this.logger("closing connection and destroying resources");
+
+    const connection = getVoiceConnection(this.voiceChannel.guild.id);
+    connection.destroy();
     this.connection = null;
+
+    this.audioPlayer.stop();
+    this.audioPlayer = null;
+
     this.playing = false;
     this.song = null;
-    this.setInstanceDeletionTimer(2);
+    this.setInstanceDeletionTimer(5);
   }
 
   sendMessage(channel, message) {
@@ -214,6 +273,14 @@ class MusicPlayer {
 
   set timeout(timeout) {
     this._timeout = timeout;
+  }
+
+  get audioPlayer() {
+    return this._audioPlayer;
+  }
+
+  set audioPlayer(audioPlayer) {
+    this._audioPlayer = audioPlayer;
   }
 }
 

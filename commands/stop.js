@@ -2,6 +2,7 @@ const getMusicPlayerInstance =
   require("../instances/music-players").getMusicPlayerInstance;
 const deleteMusicPlayerInstance =
   require("../instances/music-players").deleteMusicPlayerInstance;
+const { Permissions } = require("discord.js");
 
 module.exports = {
   name: "stop",
@@ -10,6 +11,10 @@ module.exports = {
   guildOnly: true,
   cooldown: 0,
   execute(message, args) {
+    if (!message.member.permissions.has(Permissions.FLAGS.BAN_MEMBERS)) {
+      return message.channel.send("Not privileged enough to use this command.");
+    }
+
     console.log(
       `[stop] getting the music player for guild id ${message.guild.id}`
     );
@@ -22,7 +27,7 @@ module.exports = {
       );
     }
 
-    if (!musicPlayer.connection) {
+    if (!musicPlayer.getGuildVoiceConnection()) {
       return message.channel.send("There is nothing to stop!");
     }
 

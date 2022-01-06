@@ -28,6 +28,16 @@ module.exports = {
       return message.channel.send("Nothing is currently playing.");
     }
 
-    message.channel.send(`Now playing \`${song.title}\``);
+    const nowPlayingEmbed = {
+      color: 0x0099ff,
+      fields: [
+        {
+          name: `NOW PLAYING`,
+          value: `**Song:** ${song.title}\n**Added by:** ${song.addedByName}`,
+        },
+      ],
+    };
+
+    message.channel.send({ embeds: [nowPlayingEmbed] });
   },
 };
