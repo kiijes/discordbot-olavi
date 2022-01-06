@@ -1,147 +1,153 @@
-const ytdl = require('ytdl-core')
+const ytdl = require("ytdl-core");
 
 class Player {
-    constructor() {
-        this._connection = null
-        this._dispatcher = null
-        this._queue = []
-        this._voiceChannel = null
-        this._playing = false;
+  constructor() {
+    this._connection = null;
+    this._dispatcher = null;
+    this._queue = [];
+    this._voiceChannel = null;
+    this._playing = false;
+  }
+
+  async play() {
+    this.playing = true;
+
+    if (!this.connection) {
+      this.connection = await this.voiceChannel.join();
     }
 
-    async play() {
-        this.playing = true
+    const song = this.queue.shift();
 
-        if (!this.connection) {
-            this.connection = await this.voiceChannel.join()
-        }
+    this.dispatcher = this.connection.play(
+      ytdl(song.link, {
+        quality: "highestaudio",
+        highWaterMark: 1024 * 1024 * 5,
+      }).on("finish", () => {
+        console.log("ytdl finished downloading");
+      })
+    );
 
-        const song = this.queue.shift()
+    song.requestChannel.send(`Now playing \`${song.title}\``);
 
-        this.dispatcher = this.connection.play(
-            ytdl(song.link, { quality: 'highestaudio', highWaterMark: 1024 * 1024 * 5 })
-            .on('finish', () => { console.log('ytdl finished downloading') })
-        )
+    this.dispatcher.on("finish", () => {
+      console.log("dispatcher finished playing");
+      this.playing = false;
 
-        song.requestChannel.send(`Now playing \`${song.title}\``)
+      if (!this.queue.length) {
+        this.closeConnection();
+        return;
+      }
 
-        this.dispatcher.on('finish', () => {
-            console.log('dispatcher finished playing')
-            this.playing = false
+      console.log("songs in queue, playing next one");
+      this.play();
+    });
 
-            if (!this.queue.length) {
-                this.closeConnection()
-                return
-            }
+    this.dispatcher.on("error", (error) => {
+      console.log(error);
+      this.playing = false;
+      this.closeConnection();
+    });
+  }
 
-            console.log('songs in queue, playing next one')
-            this.play()
-        })
+  async pushIntoQueue(url, textChannel) {
+    return new Promise(async (resolve, reject) => {
+      const ytRegex =
+        /^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[\w-]{11}$|^https?:\/\/youtu\.be\/[\w-]{11}$|^[\w-]{11}$/;
 
-        this.dispatcher.on('error', (error) => {
-            console.log(error)
-            this.playing = false
-            this.closeConnection()
-        })
+      if (!ytRegex.test(url)) {
+        textChannel.send("Not an acceptable YouTube link.");
+        resolve(false);
+        return;
+      }
+
+      let checkLengthResults = await this.checkLength(url);
+      if (!checkLengthResults[0]) {
+        textChannel.send("Song is too long! Limit is 1hr 1min.");
+        resolve(false);
+        return;
+      }
+
+      this.queue.push({
+        link: url,
+        title: checkLengthResults[1],
+        requestChannel: textChannel,
+      });
+      textChannel.send(`Added \`${checkLengthResults[1]}\` to queue.`);
+      resolve(true);
+    });
+  }
+
+  async checkLength(url) {
+    return new Promise(async (resolve, reject) => {
+      let options = {
+        quality: "highestaudio",
+      };
+      let info = await ytdl.getInfo(url, options);
+      let playerResponse = info.player_response;
+
+      if (playerResponse.videoDetails.lengthSeconds > 3660) {
+        resolve([false, playerResponse.videoDetails.title]);
+        return;
+      }
+      resolve([true, playerResponse.videoDetails.title]);
+    });
+  }
+
+  skip(message) {
+    this.dispatcher.destroy();
+    if (!this.queue.length) {
+      message.channel.send("No more songs in queue, stopping!");
+      this.closeConnection();
+      return;
     }
+    this.play();
+  }
 
-    async pushIntoQueue(url, textChannel) {
-        const ytRegex = /^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[\w-]{11}$|^https?:\/\/youtu\.be\/[\w-]{11}$|^[\w-]{11}$/
+  get queue() {
+    return this._queue;
+  }
 
-        let promise = new Promise(async (resolve, reject) => {
-            if (!ytRegex.test(url)) {
-                textChannel.send('Not an acceptable YouTube link.')
-                resolve(false)
-                return
-            }
+  get dispatcher() {
+    return this._dispatcher;
+  }
 
-            let checkLengthResults = await this.checkLength(url)
-            if (!checkLengthResults[0]) {
-                textChannel.send('Song is too long! Limit is 1hr 1min.')
-                resolve(false)
-                return
-            }
-    
-            this.queue.push({ link: url, title: checkLengthResults[1], requestChannel: textChannel })
-            textChannel.send(`Added \`${checkLengthResults[1]}\` to queue.`)
-            resolve(true)
-        })
+  set dispatcher(dispatcher) {
+    this._dispatcher = dispatcher;
+  }
 
-        return await promise
-    }
+  get voiceChannel() {
+    return this._voiceChannel;
+  }
 
-    async checkLength(url) {
-        let options = {
-            quality: 'highestaudio'
-        }
-        let info = await ytdl.getInfo(url, options)
-    
-        let promise = new Promise((resolve, reject) => {
-            if (info.playerResponse.videoDetails.lengthSeconds > 3660) {
-                resolve([false, info.playerResponse.videoDetails.title])
-                return
-            }
-            resolve([true, info.playerResponse.videoDetails.title])
-        })
-    
-        return await promise
-    }
+  set voiceChannel(channel) {
+    this._voiceChannel = channel;
+  }
 
-    skip(message) {
-        this.dispatcher.destroy()
-        if (!this.queue.length) {
-            message.channel.send('No more songs in queue, stopping!')
-            this.closeConnection()
-            return
-        }
-        this.play()
-    }
+  closeConnection() {
+    this.connection.disconnect();
+    this.connection = null;
+    this.playing = false;
+  }
 
-    get queue() {
-        return this._queue
-    }
+  get connection() {
+    return this._connection;
+  }
 
-    get dispatcher() {
-        return this._dispatcher
-    }
+  set connection(connection) {
+    this._connection = connection;
+  }
 
-    set dispatcher(dispatcher) {
-        this._dispatcher = dispatcher
-    }
+  sendMessage(channel, message) {
+    channel.send(message);
+  }
 
-    get voiceChannel() {
-        return this._voiceChannel
-    }
+  get playing() {
+    return this._playing;
+  }
 
-    set voiceChannel(channel) {
-        this._voiceChannel = channel
-    }
-
-    closeConnection() {
-        this.connection.disconnect()
-        this.connection = null
-        this.playing = false
-    }
-
-    get connection() {
-        return this._connection
-    }
-
-    set connection(connection) {
-        this._connection = connection
-    }
-
-    sendMessage(channel, message) {
-        channel.send(message)
-    }
-
-    get playing() {
-        return this._playing
-    }
-
-    set playing(status) {
-        this._playing = status
-    }
+  set playing(status) {
+    this._playing = status;
+  }
 }
 
 const musicPlayer = new Player();
