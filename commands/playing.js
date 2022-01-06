@@ -4,29 +4,30 @@ const deleteMusicPlayerInstance =
   require("../instances/music-players").deleteMusicPlayerInstance;
 
 module.exports = {
-  name: "stop",
-  description: "Stops the playback of audio",
+  name: "playing",
+  description: "Shows the currently playing song",
   args: false,
   guildOnly: true,
   cooldown: 0,
   execute(message, args) {
     console.log(
-      `[stop] getting the music player for guild id ${message.guild.id}`
+      `[clear] getting the music player for guild id ${message.guild.id}`
     );
     let musicPlayer = getMusicPlayerInstance(message.guild.id);
 
     if (musicPlayer === undefined) {
-      console.log(`[stop] guild id ${message.guild.id} has no music player`);
+      console.log(`[clear] guild id ${message.guild.id} has no music player`);
       return message.channel.send(
         "Server has no active music player instance! Start playback to create a music player."
       );
     }
 
-    if (!musicPlayer.connection) {
-      return message.channel.send("There is nothing to stop!");
+    const song = musicPlayer.song;
+
+    if (song === null) {
+      return message.channel.send("Nothing is currently playing.");
     }
 
-    console.log(`[stop] stopping music player in guild id ${message.guild.id}`);
-    musicPlayer.closeConnection();
+    message.channel.send(`Now playing \`${song.title}\``);
   },
 };

@@ -1,4 +1,5 @@
 const ytdl = require("ytdl-core");
+const { eventEmitter } = require("../instances/events");
 
 class MusicPlayer {
   constructor(guildId) {
@@ -8,9 +9,15 @@ class MusicPlayer {
     this._queue = [];
     this._voiceChannel = null;
     this._playing = false;
+    this._song = null;
+    this._timeout = null;
   }
 
   async play() {
+    if (this.timeout !== null) {
+      this.clearInstanceDeletionTimer();
+    }
+
     this.playing = true;
 
     if (!this.connection) {
@@ -18,6 +25,8 @@ class MusicPlayer {
     }
 
     const song = this.queue.shift();
+
+    this.song = song;
 
     this.dispatcher = this.connection.play(
       ytdl(song.link, {
@@ -33,6 +42,7 @@ class MusicPlayer {
     this.dispatcher.on("finish", () => {
       this.logger("dispatcher finished playing");
       this.playing = false;
+      this.song = null;
 
       if (!this.queue.length) {
         this.closeConnection();
@@ -50,7 +60,7 @@ class MusicPlayer {
     });
   }
 
-  async pushIntoQueue(url, textChannel) {
+  async pushIntoQueue(url, textChannel, memberId, memberName) {
     return new Promise(async (resolve, reject) => {
       const ytRegex =
         /^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[\w-]{11}$|^https?:\/\/youtu\.be\/[\w-]{11}$|^[\w-]{11}$/;
@@ -72,8 +82,12 @@ class MusicPlayer {
         link: url,
         title: checkLengthResults[1],
         requestChannel: textChannel,
+        addedById: memberId,
+        addedByName: memberName,
       });
-      textChannel.send(`Added \`${checkLengthResults[1]}\` to queue.`);
+      textChannel.send(
+        `**${memberName}** added \`${checkLengthResults[1]}\` to queue.`
+      );
       resolve(true);
     });
   }
@@ -104,8 +118,50 @@ class MusicPlayer {
     this.play();
   }
 
+  closeConnection() {
+    this.logger("closing connection");
+    this.connection.disconnect();
+    this.connection = null;
+    this.playing = false;
+    this.song = null;
+    this.setInstanceDeletionTimer(2);
+  }
+
+  sendMessage(channel, message) {
+    channel.send(message);
+  }
+
+  logger(logMessage) {
+    console.log(`[music player] ${logMessage} [guild id ${this.guildId}]`);
+  }
+
+  clearQueue() {
+    this.queue = [];
+  }
+
+  removeSongFromQueueByIndex(index) {
+    this.queue.splice(index, 1);
+  }
+
+  setInstanceDeletionTimer(minutes) {
+    this.logger(`setting ${minutes} minute timer for instance deletion`);
+    this.timeout = setTimeout(() => {
+      eventEmitter.emit("delete music player", this.guildId);
+    }, 1000 * 60 * minutes);
+  }
+
+  clearInstanceDeletionTimer() {
+    this.logger("clearing instance deletion timer");
+    clearTimeout(this.timeout);
+    this.timeout = null;
+  }
+
   get queue() {
     return this._queue;
+  }
+
+  set queue(queue) {
+    this._queue = queue;
   }
 
   get dispatcher() {
@@ -124,26 +180,12 @@ class MusicPlayer {
     this._voiceChannel = channel;
   }
 
-  closeConnection() {
-    this.connection.disconnect();
-    this.connection = null;
-    this.playing = false;
-  }
-
   get connection() {
     return this._connection;
   }
 
   set connection(connection) {
     this._connection = connection;
-  }
-
-  sendMessage(channel, message) {
-    channel.send(message);
-  }
-
-  logger(logMessage) {
-    console.log(`[music player] ${logMessage} [guild id ${this.guildId}]`);
   }
 
   get guildId() {
@@ -156,6 +198,22 @@ class MusicPlayer {
 
   set playing(status) {
     this._playing = status;
+  }
+
+  get song() {
+    return this._song;
+  }
+
+  set song(song) {
+    this._song = song;
+  }
+
+  get timeout() {
+    return this._timeout;
+  }
+
+  set timeout(timeout) {
+    this._timeout = timeout;
   }
 }
 

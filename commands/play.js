@@ -1,5 +1,8 @@
-const getMusicPlayer = require("../instances").getMusicPlayer;
-const createMusicPlayer = require("../instances").createMusicPlayer;
+const MusicPlayer = require("../classes/music-player").MusicPlayer;
+const getMusicPlayerInstance =
+  require("../instances/music-players").getMusicPlayerInstance;
+const setMusicPlayerInstance =
+  require("../instances/music-players").setMusicPlayerInstance;
 
 module.exports = {
   name: "play",
@@ -11,20 +14,21 @@ module.exports = {
   async execute(message, args) {
     if (!message.member.voice.channel) {
       return message.channel.send(
-        "You must be in a voice channel to use this command!"
+        "You must be in a voice channel to use this command."
       );
     }
 
     console.log(
       `[play] getting the music player for guild id ${message.guild.id}`
     );
-    let musicPlayer = getMusicPlayer(message.guild.id);
+    let musicPlayer = getMusicPlayerInstance(message.guild.id);
 
     if (musicPlayer === undefined) {
       console.log(
         `[play] guild id ${message.guild.id} has no music player; creating one now`
       );
-      musicPlayer = createMusicPlayer(message.guild.id);
+      musicPlayer = new MusicPlayer(message.guild.id);
+      setMusicPlayerInstance(message.guild.id, musicPlayer);
     }
 
     if (!musicPlayer.voiceChannel) {
@@ -32,12 +36,20 @@ module.exports = {
     }
 
     if (!args.length && !musicPlayer.queue.length) {
-      message.channel.send("No songs in queue to resume!");
+      message.channel.send("No songs in queue to resume.");
       return;
     }
 
     if (args.length > 0) {
-      if (!(await musicPlayer.pushIntoQueue(args[0], message.channel))) return;
+      if (
+        !(await musicPlayer.pushIntoQueue(
+          args[0],
+          message.channel,
+          message.member.id,
+          message.member.displayName
+        ))
+      )
+        return;
     }
 
     if (!musicPlayer.playing) {
