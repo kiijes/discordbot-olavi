@@ -3,13 +3,14 @@ const getMusicPlayerInstance =
   require("../instances/music-players").getMusicPlayerInstance;
 const setMusicPlayerInstance =
   require("../instances/music-players").setMusicPlayerInstance;
+const QUEUE_SIZE_LIMIT = require("../constants").QUEUE_SIZE_LIMIT;
 
 module.exports = {
   name: "play",
-  description: "Play a video from YouTube in your voice channel.",
+  description: `Play and queue up to ${QUEUE_SIZE_LIMIT} songs from YouTube.`,
   args: false,
   usage:
-    "<YouTube URL>, or leave empty to resume playback (if songs are still in queue.).",
+    "<YouTube URL>, or leave empty to resume playback if queue has songs and playback is stopped.",
   guildOnly: true,
   cooldown: 0,
   async execute(message, args) {
@@ -39,6 +40,12 @@ module.exports = {
     if (!args.length && !musicPlayer.queue.length) {
       message.channel.send("No songs in queue to resume.");
       return;
+    }
+
+    if (musicPlayer.queue.length === QUEUE_SIZE_LIMIT) {
+      return message.channel.send(
+        `Queue is full! Limit is ${QUEUE_SIZE_LIMIT} video(s).`
+      );
     }
 
     if (args.length > 0) {

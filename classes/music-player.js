@@ -9,6 +9,8 @@ const {
   StreamType,
 } = require("@discordjs/voice");
 const ytdl = require("ytdl-core");
+const MUSIC_PLAYER_INSTANCE_DELETION_TIMER_IN_MINUTES =
+  require("../constants").MUSIC_PLAYER_INSTANCE_DELETION_TIMER_IN_MINUTES;
 const { eventEmitter } = require("../instances/events");
 
 class MusicPlayer {
@@ -152,7 +154,9 @@ class MusicPlayer {
 
     this.playing = false;
     this.song = null;
-    this.setInstanceDeletionTimer(5);
+    this.setInstanceDeletionTimer(
+      MUSIC_PLAYER_INSTANCE_DELETION_TIMER_IN_MINUTES
+    );
   }
 
   sendMessage(channel, message) {

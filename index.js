@@ -38,6 +38,10 @@ client.once("ready", () => {
 client.on("messageCreate", (message) => {
   if (message.author.bot) return;
 
+  if (message.content.trim().slice(0, prefix.length) !== prefix) {
+    return;
+  }
+
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
 
@@ -48,7 +52,7 @@ client.on("messageCreate", (message) => {
   }
 
   if (!client.commands.has(commandName)) {
-    return message.channel.send("I know no such thing.");
+    return message.channel.send(`I know no such thing. Try \`${prefix}help\`.`);
   }
 
   const command = client.commands.get(commandName);

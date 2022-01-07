@@ -1,0 +1,2 @@
+module.exports.QUEUE_SIZE_LIMIT = 40;
+module.exports.MUSIC_PLAYER_INSTANCE_DELETION_TIMER_IN_MINUTES = 5;
