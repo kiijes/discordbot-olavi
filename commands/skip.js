@@ -2,6 +2,7 @@ const getMusicPlayerInstance =
   require("../instances/music-players").getMusicPlayerInstance;
 const deleteMusicPlayerInstance =
   require("../instances/music-players").deleteMusicPlayerInstance;
+const { Permissions } = require("discord.js");
 
 module.exports = {
   name: "skip",
