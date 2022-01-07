@@ -88,7 +88,11 @@ client.on("messageCreate", (message) => {
   setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
   try {
-    command.execute(message, args);
+    if (commandName === "help") {
+      command.execute(message, client.commands, prefix);
+    } else {
+      command.execute(message, args);
+    }
   } catch (error) {
     console.error(error);
     message.reply("Error executing command!");

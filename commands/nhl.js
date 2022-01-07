@@ -37,7 +37,8 @@ function formatDate(date) {
 module.exports = {
   name: "nhl",
   description: "Get the NHL schedule for yesterday, today or tomorrow.",
-  usage: "today (or leave empty) | yesterday | tomorrow | yyyy-mm-dd",
+  usage:
+    "today, yesterday, tomorrow, <yyyy-mm-dd>, or leave empty to get today's games.",
   args: false,
   guildOnly: true,
   cooldown: 5,

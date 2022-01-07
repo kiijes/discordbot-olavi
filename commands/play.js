@@ -8,7 +8,8 @@ module.exports = {
   name: "play",
   description: "Play a video from YouTube in your voice channel.",
   args: false,
-  usage: "<YouTube URL>",
+  usage:
+    "<YouTube URL>, or leave empty to resume playback (if songs are still in queue.).",
   guildOnly: true,
   cooldown: 0,
   async execute(message, args) {

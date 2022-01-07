@@ -5,7 +5,7 @@ const deleteMusicPlayerInstance =
 
 module.exports = {
   name: "playing",
-  description: "Shows the currently playing song",
+  description: "Shows the currently playing song.",
   args: false,
   guildOnly: true,
   cooldown: 0,

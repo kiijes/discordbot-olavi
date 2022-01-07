@@ -6,7 +6,7 @@ const { Permissions } = require("discord.js");
 
 module.exports = {
   name: "clear_all",
-  description: "Clears the entire music player queue",
+  description: "Clears the entire music player queue.",
   args: false,
   guildOnly: true,
   cooldown: 0,

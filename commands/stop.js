@@ -6,7 +6,7 @@ const { Permissions } = require("discord.js");
 
 module.exports = {
   name: "stop",
-  description: "Stops the playback of audio",
+  description: "Stops the playback of audio.",
   args: false,
   guildOnly: true,
   cooldown: 0,
