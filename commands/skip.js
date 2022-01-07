@@ -33,6 +33,19 @@ module.exports = {
       return;
     }
 
-    musicPlayer.skip(message);
+    if (musicPlayer.song.addedById === message.member.id) {
+      console.log(`[skip] song was added by member; skipping`);
+      musicPlayer.skip(message);
+      return;
+    } else if (!message.member.permissions.has(Permissions.FLAGS.BAN_MEMBERS)) {
+      console.log(
+        `[skip] song not added by member & member doesn't have permissions to skip`
+      );
+      message.channel.send("You do not have permissions to skip this song.");
+      return;
+    } else {
+      console.log(`[skip] member has permissions; force skip`);
+      musicPlayer.skip(message);
+    }
   },
 };
